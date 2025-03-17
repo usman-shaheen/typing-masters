@@ -87,7 +87,7 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, highlightKeys, layout =
   const homeRowKeys = getHomeRowKeys();
 
   return (
-    <div className="keyboard-container w-full max-w-4xl mx-auto mt-8">
+    <div className="keyboard-container w-full max-w-4xl mx-auto mt-4 mb-6">
       <div className="keyboard border border-typing-keyboard-border rounded-xl p-6 bg-typing-keyboard-bg shadow-lg transition-transform duration-300">
         {keyboardLayout.map((row, rowIndex) => (
           <div 

@@ -4,17 +4,15 @@ import Header from '@/components/Header';
 import TypingArea from '@/components/TypingArea';
 import Keyboard from '@/components/Keyboard';
 import ProgressChart from '@/components/ProgressChart';
-import LessonSelector from '@/components/LessonSelector';
 import StatsDisplay from '@/components/StatsDisplay';
 import TextSettings from '@/components/TextSettings';
-import { typingLessons, TypingStats, TypingLesson, TypingSettings, defaultTypingSettings } from '@/utils/typingUtils';
+import { typingLessons, TypingStats, TypingSettings, defaultTypingSettings } from '@/utils/typingUtils';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
-import { Settings, ChevronUp, ChevronDown } from "lucide-react";
+import { Settings, ChevronUp, ChevronDown, Keyboard as KeyboardIcon } from "lucide-react";
 
 const Index = () => {
-  const [selectedLesson, setSelectedLesson] = useState<TypingLesson>(typingLessons[0]);
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
   const [highlightKeys, setHighlightKeys] = useState<string[]>([]);
   const [currentStats, setCurrentStats] = useState<TypingStats>({
@@ -28,6 +26,10 @@ const Index = () => {
   const [progressHistory, setProgressHistory] = useState<TypingStats[]>([]);
   const [settings, setSettings] = useState<TypingSettings>(defaultTypingSettings);
   const [showSettings, setShowSettings] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(true);
+
+  // Current text for typing practice
+  const [currentText, setCurrentText] = useState(typingLessons[0].text);
 
   // When component mounts, try to load progress history and settings from localStorage
   useEffect(() => {
@@ -56,11 +58,11 @@ const Index = () => {
 
   // Handle typing completion
   const handleTypingComplete = (stats: TypingStats) => {
-    toast.success('Lesson completed!', {
+    toast.success('Exercise completed!', {
       description: `You typed at ${stats.wpm} WPM with ${stats.accuracy}% accuracy.`,
     });
     
-    // Add the completed lesson stats to history
+    // Add the completed exercise stats to history
     const newHistory = [...progressHistory, stats];
     setProgressHistory(newHistory);
     
@@ -81,13 +83,6 @@ const Index = () => {
   const handleActiveKeysChange = (keys: string[]) => {
     setActiveKeys(keys);
   };
-
-  // Handle lesson selection
-  const handleSelectLesson = (lesson: TypingLesson) => {
-    setSelectedLesson(lesson);
-    setActiveKeys([]);
-    setHighlightKeys([]);
-  };
   
   // Handle settings updates
   const handleUpdateSettings = (updatedSettings: Partial<TypingSettings>) => {
@@ -101,17 +96,6 @@ const Index = () => {
     });
   };
 
-  // Set message based on time setting
-  const getTestTimeMessage = () => {
-    switch(settings.testTime) {
-      case '1min': return 'You have 1 minute to complete this test';
-      case '2min': return 'You have 2 minutes to complete this test';
-      case '5min': return 'You have 5 minutes to complete this test';
-      case 'unlimited': return 'Take as much time as you need';
-      default: return '';
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-sky-50 to-white">
       <div className="container px-4 py-8 mx-auto max-w-6xl">
@@ -119,16 +103,27 @@ const Index = () => {
         
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-primary">Typing Practice</h2>
-          <Toggle 
-            pressed={showSettings} 
-            onPressedChange={setShowSettings}
-            className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20"
-            aria-label="Toggle settings"
-          >
-            <Settings size={16} />
-            <span>Settings</span>
-            {showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </Toggle>
+          <div className="flex space-x-2">
+            <Toggle 
+              pressed={showKeyboard} 
+              onPressedChange={setShowKeyboard}
+              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20"
+              aria-label="Toggle keyboard"
+            >
+              <KeyboardIcon size={16} />
+              <span>Keyboard</span>
+            </Toggle>
+            <Toggle 
+              pressed={showSettings} 
+              onPressedChange={setShowSettings}
+              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20"
+              aria-label="Toggle settings"
+            >
+              <Settings size={16} />
+              <span>Settings</span>
+              {showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </Toggle>
+          </div>
         </div>
         
         {showSettings && (
@@ -136,7 +131,6 @@ const Index = () => {
             <TextSettings 
               settings={settings} 
               onUpdateSettings={handleUpdateSettings} 
-              lesson={selectedLesson}
             />
           </div>
         )}
@@ -144,7 +138,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <TypingArea 
-              text={selectedLesson.text}
+              text={currentText}
               onComplete={handleTypingComplete}
               onProgress={handleTypingProgress}
               onActiveKeysChange={handleActiveKeysChange}
@@ -155,15 +149,17 @@ const Index = () => {
               doubleSpacing={settings.doubleSpacingBetweenSentences}
             />
             
-            <div className="text-center text-sm text-gray-500 italic">
-              {getTestTimeMessage()}
+            <div className="text-center text-sm text-gray-500 italic mb-4">
+              Press <kbd className="px-2 py-1 bg-gray-100 rounded-md text-gray-700 font-mono">Space</kbd> to start/pause the timer
             </div>
             
-            <Keyboard 
-              activeKeys={activeKeys} 
-              highlightKeys={highlightKeys} 
-              layout={settings.keyboardLayout}
-            />
+            {showKeyboard && (
+              <Keyboard 
+                activeKeys={activeKeys} 
+                highlightKeys={highlightKeys} 
+                layout={settings.keyboardLayout}
+              />
+            )}
           </div>
           
           <div className="flex flex-col gap-8">
@@ -179,12 +175,6 @@ const Index = () => {
                 <ProgressChart data={progressHistory} />
               </TabsContent>
             </Tabs>
-            
-            <LessonSelector 
-              lessons={typingLessons}
-              selectedLesson={selectedLesson}
-              onSelectLesson={handleSelectLesson}
-            />
           </div>
         </div>
       </div>

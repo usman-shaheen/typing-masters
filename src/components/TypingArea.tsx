@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { calculateWPM, calculateAccuracy, TypingStatus, TypingStats } from '@/utils/typingUtils';
 import { cn } from '@/lib/utils';
+import { Clock, Play, Pause } from 'lucide-react';
 
 interface TypingAreaProps {
   text: string;
@@ -26,6 +27,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   const [status, setStatus] = useState<TypingStatus>('idle');
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const [stats, setStats] = useState<TypingStats>({
     wpm: 0,
     accuracy: 0,
@@ -41,14 +43,30 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   // Focus the input when the component mounts
   useEffect(() => {
     inputRef.current?.focus();
+    
+    // Handle spacebar to start/pause the timer
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault(); // Prevent page scrolling
+        if (status === 'idle') {
+          startTyping();
+        } else if (status === 'running') {
+          togglePause();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [status]);
 
   // Handle typing stats calculation
   useEffect(() => {
-    if (status !== 'running') return;
+    if (status !== 'running' || isPaused) return;
 
     let correctCount = 0;
     let incorrectCount = 0;
@@ -80,32 +98,50 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     const nextChar = text[typedText.length] || '';
     onActiveKeysChange(nextChar ? [nextChar.toLowerCase()] : []);
 
-  }, [typedText, elapsedTime, status, text, onProgress, onActiveKeysChange]);
+  }, [typedText, elapsedTime, status, text, onProgress, onActiveKeysChange, isPaused]);
 
   // Check if typing is complete
   useEffect(() => {
-    if (status === 'running' && typedText.length >= text.length) {
+    if (status === 'running' && !isPaused && typedText.length >= text.length) {
       completeTyping();
     }
-  }, [typedText, text, status]);
+  }, [typedText, text, status, isPaused]);
 
   // Check if time limit is reached
   useEffect(() => {
-    if (status === 'running' && timeLimit && elapsedTime >= timeLimit) {
+    if (status === 'running' && !isPaused && timeLimit && elapsedTime >= timeLimit) {
       completeTyping();
     }
-  }, [elapsedTime, timeLimit, status]);
+  }, [elapsedTime, timeLimit, status, isPaused]);
+
+  useEffect(() => {
+    if (status === 'running' && !isPaused) {
+      timerRef.current = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [status, isPaused]);
 
   const startTyping = () => {
     if (status === 'idle') {
       setStatus('running');
       setStartTime(Date.now());
       setTypedText('');
-      
-      timerRef.current = setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-      }, 1000);
+      setElapsedTime(0);
+      setIsPaused(false);
+      inputRef.current?.focus();
     }
+  };
+
+  const togglePause = () => {
+    setIsPaused(prev => !prev);
+    inputRef.current?.focus();
   };
 
   const completeTyping = () => {
@@ -118,6 +154,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     setStatus('idle');
     setTypedText('');
     setElapsedTime(0);
+    setIsPaused(false);
     if (timerRef.current) clearInterval(timerRef.current);
     
     setStats({
@@ -128,6 +165,8 @@ const TypingArea: React.FC<TypingAreaProps> = ({
       totalChars: 0,
       time: 0
     });
+    
+    inputRef.current?.focus();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +174,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
       startTyping();
     }
     
-    if (status === 'running') {
+    if (status === 'running' && !isPaused) {
       setTypedText(e.target.value);
     }
   };
@@ -169,7 +208,28 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   return (
     <div className="typing-container w-full max-w-4xl mx-auto">
       <div className="glass-card p-6 mb-6">
-        <div className={cn("text-display mb-4", colorMode)}>
+        <div className="flex justify-between items-center mb-4">
+          <div className="timer-display flex items-center gap-2 text-xl font-mono bg-primary/10 px-4 py-2 rounded-md">
+            <Clock className="h-5 w-5 text-primary" />
+            <span className="font-bold">{formatTime(elapsedTime)}</span>
+          </div>
+          
+          <button 
+            onClick={status === 'running' ? togglePause : startTyping} 
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+            disabled={status === 'finished'}
+          >
+            {status === 'idle' ? (
+              <><Play className="h-4 w-4" /> Start</>
+            ) : isPaused ? (
+              <><Play className="h-4 w-4" /> Resume</>
+            ) : (
+              <><Pause className="h-4 w-4" /> Pause</>
+            )}
+          </button>
+        </div>
+        
+        <div className={cn("text-display mb-4", colorMode, isPaused && "opacity-60")}>
           {renderText()}
         </div>
         
@@ -178,11 +238,13 @@ const TypingArea: React.FC<TypingAreaProps> = ({
           type="text"
           value={typedText}
           onChange={handleInputChange}
-          className="typing-input"
+          className={cn("typing-input", isPaused && "opacity-60 cursor-not-allowed")}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
+          disabled={isPaused}
+          placeholder={status === 'idle' ? "Press spacebar to start typing..." : isPaused ? "Paused - press spacebar to resume" : ""}
         />
         
         <div className="flex justify-between items-center mt-6">
@@ -206,7 +268,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
               onClick={resetTyping}
               className={cn(
                 "px-4 py-2 rounded-md text-white transition-all duration-300 transform hover:scale-105",
-                status === 'finished' ? "bg-primary" : "bg-gray-400"
+                (status === 'finished' || isPaused) ? "bg-primary" : "bg-gray-400"
               )}
               disabled={status === 'idle'}
             >
