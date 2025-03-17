@@ -16,7 +16,31 @@ export interface TypingLesson {
   description: string;
   text: string;
   level: 'beginner' | 'intermediate' | 'advanced';
+  author?: string;
+  type?: string;
 }
+
+export interface TypingSettings {
+  textSelection: 'random' | 'sequential' | 'difficulty';
+  textType: 'all' | 'lyrics' | 'quotes' | 'code' | 'prose';
+  testTime: '1min' | '2min' | '5min' | 'unlimited';
+  textColorHighlighting: 'normal' | 'enhanced' | 'minimal';
+  testResetHotkey: 'all' | 'escape' | 'ctrl+r';
+  phaseShiftCorrection: boolean;
+  doubleSpacingBetweenSentences: boolean;
+  keyboardLayout: 'qwerty' | 'dvorak' | 'colemak';
+}
+
+export const defaultTypingSettings: TypingSettings = {
+  textSelection: 'random',
+  textType: 'all',
+  testTime: '1min',
+  textColorHighlighting: 'normal',
+  testResetHotkey: 'all',
+  phaseShiftCorrection: false,
+  doubleSpacingBetweenSentences: false,
+  keyboardLayout: 'qwerty'
+};
 
 export const calculateWPM = (
   totalTypedChars: number,
@@ -38,6 +62,15 @@ export const calculateAccuracy = (correctChars: number, totalChars: number): num
 };
 
 export const typingLessons: TypingLesson[] = [
+  {
+    id: 'creep',
+    title: 'Creep',
+    description: 'Popular song by Radiohead',
+    text: 'When you were here before, couldn\'t look you in the eye. You\'re just like an angel, your skin makes me cry. You float like a feather in a beautiful world. I wish I was special, you\'re so very special.',
+    level: 'intermediate',
+    author: 'Radiohead',
+    type: 'Lyrics'
+  },
   {
     id: 'home-row',
     title: 'Home Row Keys',
@@ -64,7 +97,8 @@ export const typingLessons: TypingLesson[] = [
     title: 'Code Syntax',
     description: 'Practice typing programming symbols and syntax',
     text: 'function calculateSum(a, b) { return a + b; } const result = calculateSum(5, 10); console.log(`The sum is: ${result}`);',
-    level: 'advanced'
+    level: 'advanced',
+    type: 'Code'
   },
   {
     id: 'numbers-symbols',
