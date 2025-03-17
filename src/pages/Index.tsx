@@ -6,11 +6,12 @@ import Keyboard from '@/components/Keyboard';
 import ProgressChart from '@/components/ProgressChart';
 import LessonSelector from '@/components/LessonSelector';
 import StatsDisplay from '@/components/StatsDisplay';
-import { typingLessons, TypingStats } from '@/utils/typingUtils';
-import { toast } from '@/components/ui/sonner';
+import { typingLessons, TypingStats, TypingLesson } from '@/utils/typingUtils';
+// Fix the toast import from sonner
+import { toast } from 'sonner';
 
 const Index = () => {
-  const [selectedLesson, setSelectedLesson] = useState(typingLessons[0]);
+  const [selectedLesson, setSelectedLesson] = useState<TypingLesson>(typingLessons[0]);
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
   const [highlightKeys, setHighlightKeys] = useState<string[]>([]);
   const [currentStats, setCurrentStats] = useState<TypingStats>({
@@ -66,8 +67,8 @@ const Index = () => {
     setActiveKeys(keys);
   };
 
-  // Handle lesson selection
-  const handleSelectLesson = (lesson: TypingStats) => {
+  // Handle lesson selection - Fix the parameter type
+  const handleSelectLesson = (lesson: TypingLesson) => {
     setSelectedLesson(lesson);
     setActiveKeys([]);
     setHighlightKeys([]);
