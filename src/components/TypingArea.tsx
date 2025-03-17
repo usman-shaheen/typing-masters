@@ -8,13 +8,19 @@ interface TypingAreaProps {
   onComplete: (stats: TypingStats) => void;
   onProgress: (stats: TypingStats) => void;
   onActiveKeysChange: (keys: string[]) => void;
+  timeLimit: number | null;
+  colorMode: 'normal' | 'enhanced' | 'minimal';
+  doubleSpacing: boolean;
 }
 
 const TypingArea: React.FC<TypingAreaProps> = ({ 
   text, 
   onComplete, 
   onProgress,
-  onActiveKeysChange
+  onActiveKeysChange,
+  timeLimit,
+  colorMode,
+  doubleSpacing
 }) => {
   const [typedText, setTypedText] = useState<string>('');
   const [status, setStatus] = useState<TypingStatus>('idle');
@@ -83,6 +89,13 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     }
   }, [typedText, text, status]);
 
+  // Check if time limit is reached
+  useEffect(() => {
+    if (status === 'running' && timeLimit && elapsedTime >= timeLimit) {
+      completeTyping();
+    }
+  }, [elapsedTime, timeLimit, status]);
+
   const startTyping = () => {
     if (status === 'idle') {
       setStatus('running');
@@ -128,13 +141,21 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   };
 
   const renderText = () => {
-    return text.split('').map((char, index) => {
+    const displayText = doubleSpacing ? text.replace(/\.\s+/g, '.  ') : text;
+    
+    return displayText.split('').map((char, index) => {
       let className = '';
       
       if (index < typedText.length) {
-        className = typedText[index] === char ? 'correct' : 'incorrect';
+        if (typedText[index] === char) {
+          className = `correct ${colorMode === 'enhanced' ? 'enhanced' : ''}`;
+        } else {
+          className = `incorrect ${colorMode === 'enhanced' ? 'enhanced' : ''}`;
+        }
       } else if (index === typedText.length) {
-        className = 'current';
+        className = `current ${colorMode === 'enhanced' ? 'pulse' : ''}`;
+      } else if (colorMode === 'minimal') {
+        className = 'minimal';
       }
       
       return (
@@ -148,7 +169,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   return (
     <div className="typing-container w-full max-w-4xl mx-auto">
       <div className="glass-card p-6 mb-6">
-        <div className="text-display mb-4">
+        <div className={cn("text-display mb-4", colorMode)}>
           {renderText()}
         </div>
         
