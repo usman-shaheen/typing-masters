@@ -79,8 +79,8 @@ const Index = () => {
       <div className="container px-4 py-8 mx-auto max-w-6xl">
         <Header />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             <TypingArea 
               text={selectedLesson.text}
               onComplete={handleTypingComplete}
@@ -94,7 +94,7 @@ const Index = () => {
             />
           </div>
           
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8">
             <StatsDisplay stats={currentStats} />
             <ProgressChart data={progressHistory} />
             <LessonSelector 

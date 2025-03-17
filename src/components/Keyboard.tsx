@@ -56,11 +56,11 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, highlightKeys }) => {
 
   return (
     <div className="keyboard-container w-full max-w-4xl mx-auto mt-8">
-      <div className="keyboard border border-typing-keyboard-border rounded-xl p-4 bg-typing-keyboard-bg shadow-lg transition-transform duration-300">
+      <div className="keyboard border border-typing-keyboard-border rounded-xl p-6 bg-typing-keyboard-bg shadow-lg transition-transform duration-300">
         {keyboardLayout.map((row, rowIndex) => (
           <div 
             key={`row-${rowIndex}`} 
-            className="flex justify-center gap-1 mb-1"
+            className="flex justify-center gap-1.5 mb-1.5"
           >
             {row.map((key) => {
               const keyLower = key.toLowerCase();
@@ -72,12 +72,14 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, highlightKeys }) => {
                 <div
                   key={`key-${key}`}
                   className={cn(
-                    'key h-12',
+                    'key h-12 font-medium',
                     keyWidths[key] || 'w-10',
                     isActive && 'active',
                     isHighlight && 'highlight',
                     isPressed && 'pressed',
-                    isActive || isHighlight || isPressed ? 'animate-key-press' : ''
+                    isActive || isHighlight || isPressed ? 'animate-key-press' : '',
+                    rowIndex === 2 && ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'].includes(keyLower) 
+                      ? 'border-b-2 border-b-primary/30' : ''
                   )}
                 >
                   {key}
