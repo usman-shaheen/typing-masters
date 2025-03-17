@@ -7,7 +7,7 @@ import ProgressChart from '@/components/ProgressChart';
 import LessonSelector from '@/components/LessonSelector';
 import StatsDisplay from '@/components/StatsDisplay';
 import { typingLessons, TypingStats, TypingLesson } from '@/utils/typingUtils';
-// Fix the toast import from sonner
+// Import toast directly from sonner package
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -67,7 +67,7 @@ const Index = () => {
     setActiveKeys(keys);
   };
 
-  // Handle lesson selection - Fix the parameter type
+  // Handle lesson selection
   const handleSelectLesson = (lesson: TypingLesson) => {
     setSelectedLesson(lesson);
     setActiveKeys([]);
