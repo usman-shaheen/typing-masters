@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TypingArea from '@/components/TypingArea';
@@ -28,7 +27,6 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
 
-  // Current text for typing practice (default to the long practice text)
   const [currentText, setCurrentText] = useState(longPracticeText);
   const [textInfo, setTextInfo] = useState({
     title: "Comprehensive Typing Practice",
@@ -36,7 +34,6 @@ const Index = () => {
     type: "Practice Text"
   });
 
-  // When component mounts, try to load progress history and settings from localStorage
   useEffect(() => {
     const savedProgress = localStorage.getItem('typingProgress');
     if (savedProgress) {
@@ -61,20 +58,16 @@ const Index = () => {
     }
   }, []);
 
-  // Handle typing completion
   const handleTypingComplete = (stats: TypingStats) => {
     toast.success('Exercise completed!', {
       description: `You typed at ${stats.wpm} WPM with ${stats.accuracy}% accuracy.`,
     });
     
-    // Add the completed exercise stats to history
     const newHistory = [...progressHistory, stats];
     setProgressHistory(newHistory);
     
-    // Save to localStorage
     localStorage.setItem('typingProgress', JSON.stringify(newHistory));
     
-    // Highlight 'home row' keys based on the selected keyboard layout
     const homeRowMap = {
       'qwerty': ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'],
       'qwerty-uk': ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'],
@@ -90,30 +83,25 @@ const Index = () => {
     setHighlightKeys(homeRowMap[settings.keyboardLayout] || ['a', 's', 'd', 'f', 'j', 'k', 'l', ';']);
   };
 
-  // Handle typing progress updates
   const handleTypingProgress = (stats: TypingStats) => {
     setCurrentStats(stats);
     setHighlightKeys([]);
   };
 
-  // Handle active keys for keyboard display
   const handleActiveKeysChange = (keys: string[]) => {
     setActiveKeys(keys);
   };
   
-  // Handle settings updates
   const handleUpdateSettings = (updatedSettings: Partial<TypingSettings>) => {
     const newSettings = { ...settings, ...updatedSettings };
     setSettings(newSettings);
     localStorage.setItem('typingSettings', JSON.stringify(newSettings));
     
-    // Show toast notification
     toast.success('Settings updated', {
       description: 'Your typing preferences have been saved.',
     });
   };
 
-  // Handle custom text submission
   const handleCustomTextSubmit = (text: string) => {
     setCurrentText(text);
     setTextInfo({
@@ -127,9 +115,15 @@ const Index = () => {
     });
   };
 
-  // Get time limit in seconds based on settings
   const getTimeLimit = () => {
     return timeMapping[settings.testTime] || 60;
+  };
+
+  const mapColorMode = (settingValue: string): "normal" | "enhanced" | "minimal" => {
+    if (settingValue === "none") {
+      return "minimal";
+    }
+    return settingValue as "normal" | "enhanced";
   };
 
   return (
@@ -186,7 +180,7 @@ const Index = () => {
               onProgress={handleTypingProgress}
               onActiveKeysChange={handleActiveKeysChange}
               timeLimit={getTimeLimit()}
-              colorMode={settings.textColorHighlighting}
+              colorMode={mapColorMode(settings.textColorHighlighting)}
               doubleSpacing={settings.doubleSpacingBetweenSentences}
             />
             
