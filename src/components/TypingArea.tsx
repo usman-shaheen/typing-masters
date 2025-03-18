@@ -2,7 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { calculateWPM, calculateAccuracy, TypingStatus, TypingStats } from '@/utils/typingUtils';
 import { cn } from '@/lib/utils';
-import { Clock, Play, Pause } from 'lucide-react';
+import { Clock, Play, Pause, ArrowUp, ArrowDown, Plus, Minus } from 'lucide-react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 interface TypingAreaProps {
   text: string;
@@ -27,6 +29,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   const [status, setStatus] = useState<TypingStatus>('idle');
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [remainingTime, setRemainingTime] = useState<number>(timeLimit || 60);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [stats, setStats] = useState<TypingStats>({
     wpm: 0,
@@ -36,9 +39,27 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     totalChars: 0,
     time: 0
   });
+  const [paragraphs, setParagraphs] = useState<string[]>([]);
+  const [currentParagraphIndex, setCurrentParagraphIndex] = useState<number>(0);
+  const [currentParagraphText, setCurrentParagraphText] = useState<string>('');
+  const [fontSize, setFontSize] = useState<number>(16);
+  const [backspaceCount, setBackspaceCount] = useState<number>(1);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Split text into paragraphs on component mount or when text changes
+  useEffect(() => {
+    const splitParagraphs = text
+      .split(/\n{2,}/) // Split by double newlines
+      .filter(p => p.trim().length > 0) // Remove empty paragraphs
+      .map(p => p.trim());
+    
+    setParagraphs(splitParagraphs);
+    if (splitParagraphs.length > 0) {
+      setCurrentParagraphText(splitParagraphs[0]);
+    }
+  }, [text]);
 
   // Focus the input when the component mounts
   useEffect(() => {
@@ -54,6 +75,13 @@ const TypingArea: React.FC<TypingAreaProps> = ({
           togglePause();
         }
       }
+      
+      // Handle backspace for backspace count
+      if (e.code === 'Backspace' && status === 'running' && !isPaused) {
+        // The actual deletion of characters is handled by the browser
+        // This is just for counting backspaces
+        setBackspaceCount(prev => prev + 1);
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
@@ -62,7 +90,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
       if (timerRef.current) clearInterval(timerRef.current);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [status]);
+  }, [status, isPaused]);
 
   // Handle typing stats calculation
   useEffect(() => {
@@ -72,9 +100,9 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     let incorrectCount = 0;
 
     for (let i = 0; i < typedText.length; i++) {
-      if (i >= text.length) {
+      if (i >= currentParagraphText.length) {
         incorrectCount++;
-      } else if (typedText[i] === text[i]) {
+      } else if (typedText[i] === currentParagraphText[i]) {
         correctCount++;
       } else {
         incorrectCount++;
@@ -95,29 +123,47 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     onProgress(newStats);
 
     // Update active keys for the virtual keyboard
-    const nextChar = text[typedText.length] || '';
+    const nextChar = currentParagraphText[typedText.length] || '';
     onActiveKeysChange(nextChar ? [nextChar.toLowerCase()] : []);
 
-  }, [typedText, elapsedTime, status, text, onProgress, onActiveKeysChange, isPaused]);
+  }, [typedText, elapsedTime, status, currentParagraphText, onProgress, onActiveKeysChange, isPaused]);
 
-  // Check if typing is complete
+  // Check if current paragraph is complete and move to next
   useEffect(() => {
-    if (status === 'running' && !isPaused && typedText.length >= text.length) {
-      completeTyping();
+    if (status === 'running' && !isPaused && typedText.length >= currentParagraphText.length) {
+      // Move to the next paragraph
+      if (currentParagraphIndex < paragraphs.length - 1) {
+        setCurrentParagraphIndex(prevIndex => prevIndex + 1);
+        setTypedText('');
+      } else {
+        // All paragraphs completed
+        completeTyping();
+      }
     }
-  }, [typedText, text, status, isPaused]);
+  }, [typedText, currentParagraphText, status, isPaused, currentParagraphIndex, paragraphs.length]);
+
+  // Update current paragraph text when index changes
+  useEffect(() => {
+    if (currentParagraphIndex < paragraphs.length) {
+      setCurrentParagraphText(paragraphs[currentParagraphIndex]);
+    }
+  }, [currentParagraphIndex, paragraphs]);
 
   // Check if time limit is reached
   useEffect(() => {
-    if (status === 'running' && !isPaused && timeLimit && elapsedTime >= timeLimit) {
+    if (status === 'running' && !isPaused && timeLimit && remainingTime <= 0) {
       completeTyping();
     }
-  }, [elapsedTime, timeLimit, status, isPaused]);
+  }, [remainingTime, timeLimit, status, isPaused]);
 
+  // Timer effect for countdown
   useEffect(() => {
     if (status === 'running' && !isPaused) {
       timerRef.current = setInterval(() => {
         setElapsedTime(prev => prev + 1);
+        if (timeLimit) {
+          setRemainingTime(prev => Math.max(0, prev - 1));
+        }
       }, 1000);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -126,7 +172,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [status, isPaused]);
+  }, [status, isPaused, timeLimit]);
 
   const startTyping = () => {
     if (status === 'idle') {
@@ -134,6 +180,9 @@ const TypingArea: React.FC<TypingAreaProps> = ({
       setStartTime(Date.now());
       setTypedText('');
       setElapsedTime(0);
+      if (timeLimit) {
+        setRemainingTime(timeLimit);
+      }
       setIsPaused(false);
       inputRef.current?.focus();
     }
@@ -154,7 +203,11 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     setStatus('idle');
     setTypedText('');
     setElapsedTime(0);
+    if (timeLimit) {
+      setRemainingTime(timeLimit);
+    }
     setIsPaused(false);
+    setCurrentParagraphIndex(0);
     if (timerRef.current) clearInterval(timerRef.current);
     
     setStats({
@@ -179,8 +232,26 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     }
   };
 
+  const increaseFontSize = () => {
+    setFontSize(prev => Math.min(prev + 1, 24));
+  };
+
+  const decreaseFontSize = () => {
+    setFontSize(prev => Math.max(prev - 1, 12));
+  };
+
+  const increaseBackspaceCount = () => {
+    setBackspaceCount(prev => Math.min(prev + 1, 10));
+  };
+
+  const decreaseBackspaceCount = () => {
+    setBackspaceCount(prev => Math.max(prev - 1, 1));
+  };
+
   const renderText = () => {
-    const displayText = doubleSpacing ? text.replace(/\.\s+/g, '.  ') : text;
+    const displayText = doubleSpacing 
+      ? currentParagraphText.replace(/\.\s+/g, '.  ') 
+      : currentParagraphText;
     
     return displayText.split('').map((char, index) => {
       let className = '';
@@ -211,25 +282,79 @@ const TypingArea: React.FC<TypingAreaProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="timer-display flex items-center gap-2 text-xl font-mono bg-primary/10 px-4 py-2 rounded-md">
             <Clock className="h-5 w-5 text-primary" />
-            <span className="font-bold">{formatTime(elapsedTime)}</span>
+            <span className="font-bold">
+              {timeLimit ? formatTime(remainingTime) : formatTime(elapsedTime)}
+            </span>
           </div>
           
-          <button 
-            onClick={status === 'running' ? togglePause : startTyping} 
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-            disabled={status === 'finished'}
-          >
-            {status === 'idle' ? (
-              <><Play className="h-4 w-4" /> Start</>
-            ) : isPaused ? (
-              <><Play className="h-4 w-4" /> Resume</>
-            ) : (
-              <><Pause className="h-4 w-4" /> Pause</>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="font-adjustment flex items-center space-x-1 mr-4">
+              <span className="text-sm text-gray-600">Font:</span>
+              <Button 
+                onClick={decreaseFontSize} 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium w-5 text-center">{fontSize}</span>
+              <Button 
+                onClick={increaseFontSize} 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="backspace-adjustment flex items-center space-x-1 mr-4">
+              <span className="text-sm text-gray-600">Backspace:</span>
+              <Button 
+                onClick={decreaseBackspaceCount} 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium w-5 text-center">{backspaceCount}</span>
+              <Button 
+                onClick={increaseBackspaceCount} 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <button 
+              onClick={status === 'running' ? togglePause : startTyping} 
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              disabled={status === 'finished'}
+            >
+              {status === 'idle' ? (
+                <><Play className="h-4 w-4" /> Start</>
+              ) : isPaused ? (
+                <><Play className="h-4 w-4" /> Resume</>
+              ) : (
+                <><Pause className="h-4 w-4" /> Pause</>
+              )}
+            </button>
+          </div>
         </div>
         
-        <div className={cn("text-display mb-4", colorMode, isPaused && "opacity-60")}>
+        <div className="mb-2 flex justify-between text-sm text-gray-500">
+          <span>Paragraph {currentParagraphIndex + 1} of {paragraphs.length}</span>
+          <span>{paragraphs.length - currentParagraphIndex - 1} paragraphs remaining</span>
+        </div>
+        
+        <div 
+          className={cn("text-display mb-4", colorMode, isPaused && "opacity-60")}
+          style={{ fontSize: `${fontSize}px` }}
+        >
           {renderText()}
         </div>
         
@@ -238,7 +363,12 @@ const TypingArea: React.FC<TypingAreaProps> = ({
           type="text"
           value={typedText}
           onChange={handleInputChange}
-          className={cn("typing-input", isPaused && "opacity-60 cursor-not-allowed")}
+          className={cn(
+            "typing-input", 
+            isPaused && "opacity-60 cursor-not-allowed",
+            "text-base"
+          )}
+          style={{ fontSize: `${fontSize}px` }}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -259,7 +389,9 @@ const TypingArea: React.FC<TypingAreaProps> = ({
             </div>
             <div className="stat">
               <div className="text-sm font-medium text-gray-500">Time</div>
-              <div className="text-2xl font-bold">{formatTime(elapsedTime)}</div>
+              <div className="text-2xl font-bold">
+                {timeLimit ? formatTime(remainingTime) : formatTime(elapsedTime)}
+              </div>
             </div>
           </div>
           

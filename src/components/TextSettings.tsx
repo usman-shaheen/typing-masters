@@ -56,7 +56,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.textSelection} 
             onValueChange={(value) => onUpdateSettings({ textSelection: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
               <SelectValue placeholder="Select text selection mode" />
             </SelectTrigger>
             <SelectContent>
@@ -83,7 +83,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
               }
             }}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
               <SelectValue placeholder="Select text type" />
             </SelectTrigger>
             <SelectContent>
@@ -110,20 +110,21 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
             placeholder="Enter your custom text here..."
-            className="mb-2 min-h-[100px]"
+            className="mb-2 min-h-[100px] text-base"
           />
           <div className="flex gap-2">
             <Button 
               onClick={handleCustomTextSubmit}
-              className="bg-primary hover:bg-primary/90"
-              size="sm"
+              className="bg-primary hover:bg-primary/90 h-10 text-base"
+              size="default"
             >
               Submit
             </Button>
             <Button 
               onClick={clearCustomText}
               variant="outline"
-              size="sm"
+              size="default"
+              className="h-10 text-base"
             >
               Clear Text
             </Button>
@@ -141,7 +142,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.testTime} 
             onValueChange={(value) => onUpdateSettings({ testTime: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
               <SelectValue placeholder="Select test time" />
             </SelectTrigger>
             <SelectContent>
@@ -163,7 +164,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.textColorHighlighting} 
             onValueChange={(value) => onUpdateSettings({ textColorHighlighting: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
               <SelectValue placeholder="Select highlighting style" />
             </SelectTrigger>
             <SelectContent>
@@ -187,7 +188,8 @@ const TextSettings: React.FC<TextSettingsProps> = ({
           >
             <SelectTrigger className={cn(
               "bg-primary/10 border-primary/20",
-              "hover:bg-primary/20 transition-colors"
+              "hover:bg-primary/20 transition-colors",
+              "h-11 text-base"
             )}>
               <SelectValue placeholder="Select keyboard layout" />
             </SelectTrigger>
@@ -211,7 +213,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.testResetHotkey} 
             onValueChange={(value) => onUpdateSettings({ testResetHotkey: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
               <SelectValue placeholder="Select reset hotkeys" />
             </SelectTrigger>
             <SelectContent>
@@ -233,8 +235,9 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             onCheckedChange={(checked) => 
               onUpdateSettings({ phaseShiftCorrection: checked === true })
             }
+            className="h-5 w-5"
           />
-          <Label htmlFor="phaseShift" className="text-sm cursor-pointer">
+          <Label htmlFor="phaseShift" className="text-base cursor-pointer">
             Phase Shift Correction (auto-corrects misalignment with text)
           </Label>
         </div>
@@ -246,8 +249,9 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             onCheckedChange={(checked) => 
               onUpdateSettings({ doubleSpacingBetweenSentences: checked === true })
             }
+            className="h-5 w-5"
           />
-          <Label htmlFor="doubleSpacing" className="text-sm cursor-pointer">
+          <Label htmlFor="doubleSpacing" className="text-base cursor-pointer">
             Double spacing between sentences
           </Label>
         </div>

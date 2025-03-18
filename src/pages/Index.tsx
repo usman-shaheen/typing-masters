@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TypingArea from '@/components/TypingArea';
@@ -143,21 +144,21 @@ const Index = () => {
             <Toggle 
               pressed={showKeyboard} 
               onPressedChange={setShowKeyboard}
-              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20"
+              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-base"
               aria-label="Toggle keyboard"
             >
-              <KeyboardIcon size={16} />
+              <KeyboardIcon size={18} />
               <span>Keyboard</span>
             </Toggle>
             <Toggle 
               pressed={showSettings} 
               onPressedChange={setShowSettings}
-              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20"
+              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-base"
               aria-label="Toggle settings"
             >
-              <Settings size={16} />
+              <Settings size={18} />
               <span>Settings</span>
-              {showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {showSettings ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </Toggle>
           </div>
         </div>
@@ -200,8 +201,8 @@ const Index = () => {
           <div className="flex flex-col gap-8">
             <Tabs defaultValue="stats" className="w-full">
               <TabsList className="w-full grid grid-cols-2">
-                <TabsTrigger value="stats">Statistics</TabsTrigger>
-                <TabsTrigger value="progress">Progress</TabsTrigger>
+                <TabsTrigger value="stats" className="text-base py-2.5">Statistics</TabsTrigger>
+                <TabsTrigger value="progress" className="text-base py-2.5">Progress</TabsTrigger>
               </TabsList>
               <TabsContent value="stats" className="mt-3">
                 <StatsDisplay stats={currentStats} />
