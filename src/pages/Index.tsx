@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TypingArea from '@/components/TypingArea';
@@ -26,9 +25,9 @@ const Index = () => {
   const [progressHistory, setProgressHistory] = useState<TypingStats[]>([]);
   
   // Set default timer to 1 minute (60 seconds)
-  const initialSettings = {
+  const initialSettings: TypingSettings = {
     ...defaultTypingSettings,
-    testTime: '1min'
+    testTime: '1min' // Explicitly use a valid string literal value from the union type
   };
   
   const [settings, setSettings] = useState<TypingSettings>(initialSettings);
@@ -59,7 +58,16 @@ const Index = () => {
     if (savedSettings) {
       try {
         const parsedSettings = JSON.parse(savedSettings);
-        setSettings({...initialSettings, ...parsedSettings});
+        // Ensure that testTime is a valid option
+        const validTestTime = timeMapping.hasOwnProperty(parsedSettings.testTime) 
+          ? parsedSettings.testTime 
+          : '1min';
+        
+        setSettings({
+          ...initialSettings,
+          ...parsedSettings,
+          testTime: validTestTime as TypingSettings['testTime'] // Type assertion to ensure correct type
+        });
       } catch (e) {
         console.error('Error loading saved settings:', e);
       }
