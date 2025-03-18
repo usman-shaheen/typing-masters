@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { calculateWPM, calculateAccuracy, TypingStatus, TypingStats } from '@/utils/typingUtils';
 import { cn } from '@/lib/utils';
 import { Clock, Play, Pause, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TypingAreaProps {
   text: string;
@@ -44,10 +46,11 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
   
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    const averageCharsPerLine = 60;
-    const linesPerParagraph = 4;
+    const averageCharsPerLine = isMobile ? 40 : 60;
+    const linesPerParagraph = isMobile ? 3 : 4;
     const charsPerParagraph = averageCharsPerLine * linesPerParagraph;
     
     const words = text.split(/\s+/);
@@ -74,7 +77,7 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
     if (splitParagraphs.length > 0) {
       setCurrentParagraphText(splitParagraphs[0]);
     }
-  }, [text]);
+  }, [text, isMobile]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -265,10 +268,10 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
 
   return (
     <div className="typing-container w-full max-w-4xl mx-auto">
-      <div className="glass-card p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="timer-display flex items-center gap-2 text-xl font-mono bg-primary/10 px-4 py-2 rounded-md">
-            <Clock className="h-5 w-5 text-primary" />
+      <div className="glass-card p-3 md:p-6 mb-4 md:mb-6">
+        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center mb-4 gap-2 xs:gap-0">
+          <div className="timer-display flex items-center gap-2 text-base md:text-xl font-mono bg-primary/10 px-2 py-1 md:px-4 md:py-2 rounded-md">
+            <Clock className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             <span className="font-bold">
               {timeLimit ? formatTime(remainingTime) : formatTime(elapsedTime)}
             </span>
@@ -277,27 +280,27 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
           <div className="flex items-center gap-2">
             <button 
               onClick={status === 'running' ? togglePause : startTyping} 
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              className="flex items-center gap-1 md:gap-2 bg-primary text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:bg-primary/90 transition-colors text-sm md:text-base"
               disabled={status === 'finished'}
             >
               {status === 'idle' ? (
-                <><Play className="h-4 w-4" /> Start</>
+                <><Play className="h-3.5 w-3.5 md:h-4 md:w-4" /> Start</>
               ) : isPaused ? (
-                <><Play className="h-4 w-4" /> Resume</>
+                <><Play className="h-3.5 w-3.5 md:h-4 md:w-4" /> Resume</>
               ) : (
-                <><Pause className="h-4 w-4" /> Pause</>
+                <><Pause className="h-3.5 w-3.5 md:h-4 md:w-4" /> Pause</>
               )}
             </button>
           </div>
         </div>
         
-        <div className="mb-2 flex justify-between text-sm text-gray-500">
+        <div className="mb-2 flex justify-between text-xs md:text-sm text-gray-500">
           <span>Paragraph {currentParagraphIndex + 1} of {paragraphs.length}</span>
           <span>{paragraphs.length - currentParagraphIndex - 1} paragraphs remaining</span>
         </div>
         
         <div 
-          className={cn("text-display limited-height mb-4", colorMode, isPaused && "opacity-60")}
+          className={cn("text-display limited-height mb-3 md:mb-4", colorMode, isPaused && "opacity-60")}
         >
           {renderText()}
         </div>
@@ -310,7 +313,7 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
           className={cn(
             "typing-input", 
             isPaused && "opacity-60 cursor-not-allowed",
-            "text-base"
+            "text-sm md:text-base"
           )}
           autoComplete="off"
           autoCorrect="off"
@@ -320,19 +323,19 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
           placeholder={status === 'idle' ? "Press spacebar to start typing..." : isPaused ? "Paused - press spacebar to resume" : ""}
         />
         
-        <div className="flex justify-between items-center mt-6">
-          <div className="stats flex gap-6">
+        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center mt-4 md:mt-6 gap-3 xs:gap-0">
+          <div className="stats grid grid-cols-3 gap-3 md:gap-6 w-full xs:w-auto">
             <div className="stat">
-              <div className="text-sm font-medium text-gray-500">WPM</div>
-              <div className="text-2xl font-bold">{stats.wpm}</div>
+              <div className="text-xs md:text-sm font-medium text-gray-500">WPM</div>
+              <div className="text-lg md:text-2xl font-bold">{stats.wpm}</div>
             </div>
             <div className="stat">
-              <div className="text-sm font-medium text-gray-500">Accuracy</div>
-              <div className="text-2xl font-bold">{stats.accuracy}%</div>
+              <div className="text-xs md:text-sm font-medium text-gray-500">Accuracy</div>
+              <div className="text-lg md:text-2xl font-bold">{stats.accuracy}%</div>
             </div>
             <div className="stat">
-              <div className="text-sm font-medium text-gray-500">Time</div>
-              <div className="text-2xl font-bold">
+              <div className="text-xs md:text-sm font-medium text-gray-500">Time</div>
+              <div className="text-lg md:text-2xl font-bold">
                 {timeLimit ? formatTime(remainingTime) : formatTime(elapsedTime)}
               </div>
             </div>
@@ -342,7 +345,7 @@ const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({
             <button
               onClick={resetTyping}
               className={cn(
-                "px-4 py-2 rounded-md text-white transition-all duration-300 transform hover:scale-105",
+                "px-3 py-1.5 md:px-4 md:py-2 rounded-md text-white transition-all duration-300 text-sm md:text-base transform hover:scale-105",
                 (status === 'finished' || isPaused) ? "bg-primary" : "bg-gray-400"
               )}
               disabled={status === 'idle'}

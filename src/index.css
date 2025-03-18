@@ -1,4 +1,7 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -74,18 +77,19 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Poppins', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
   h1 {
-    @apply text-3xl sm:text-4xl;
+    @apply text-2xl sm:text-3xl md:text-4xl;
   }
   h2 {
-    @apply text-2xl sm:text-3xl;
+    @apply text-xl sm:text-2xl md:text-3xl;
   }
   h3 {
-    @apply text-xl sm:text-2xl;
+    @apply text-lg sm:text-xl md:text-2xl;
   }
 }
 
@@ -96,16 +100,29 @@
 
 /* Typing area text styling */
 .text-display {
-  @apply font-mono py-6 px-4 rounded-lg bg-gray-50 min-h-[120px] leading-relaxed overflow-auto whitespace-pre-wrap;
+  @apply font-mono py-4 md:py-6 px-3 md:px-4 rounded-lg bg-gray-50 min-h-[100px] md:min-h-[120px] leading-relaxed overflow-auto whitespace-pre-wrap;
   line-height: 1.7;
-  font-size: 16px;
+  font-size: 14px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+@media (min-width: 768px) {
+  .text-display {
+    font-size: 16px;
+  }
 }
 
 /* Typing input styling */
 .typing-input {
-  @apply w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
-  font-family: 'Courier New', monospace;
-  font-size: 16px;
+  @apply w-full p-2 md:p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .typing-input {
+    font-size: 16px;
+  }
 }
 
 /* Text color styling for typed text */
@@ -139,13 +156,18 @@
 
 /* Make paragraph boundaries more visible */
 .text-display p, .text-display div.paragraph {
-  @apply mb-4;
+  @apply mb-3 md:mb-4;
 }
 
 /* Show only a limited number of lines */
 .text-display .limited-height {
-  max-height: 120px;
-  overflow: hidden;
+  max-height: 100px;
+}
+
+@media (min-width: 768px) {
+  .text-display .limited-height {
+    max-height: 120px;
+  }
 }
 
 /* Animations */
@@ -160,16 +182,22 @@
 
 /* Enhanced keyboard styling */
 .keyboard-container {
-  @apply bg-gray-50 p-2 rounded-xl border border-gray-200 shadow-sm;
+  @apply bg-gray-50 p-1 md:p-2 rounded-xl border border-gray-200 shadow-sm;
 }
 
 .keyboard-row {
-  @apply flex justify-center mb-2;
+  @apply flex justify-center mb-1 md:mb-2;
 }
 
 .keyboard-key {
-  @apply relative m-0.5 py-2 px-3 rounded-md border border-gray-300 bg-white shadow-sm text-center transition-all font-mono text-sm;
-  min-width: 2rem;
+  @apply relative m-0.5 py-1 md:py-2 px-2 md:px-3 rounded-md border border-gray-300 bg-white shadow-sm text-center transition-all font-mono text-xs md:text-sm;
+  min-width: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .keyboard-key {
+    min-width: 2rem;
+  }
 }
 
 .keyboard-key.active {
@@ -182,16 +210,45 @@
 
 /* Special keys */
 .keyboard-key.space {
-  @apply px-4;
-  width: 12rem;
+  @apply px-3 md:px-4;
+  width: 8rem;
+}
+
+@media (min-width: 768px) {
+  .keyboard-key.space {
+    width: 12rem;
+  }
 }
 
 .keyboard-key.shift, .keyboard-key.backspace, .keyboard-key.tab, .keyboard-key.enter, .keyboard-key.capslock {
-  @apply px-4 text-xs;
-  min-width: 3.5rem;
+  @apply px-2 md:px-4 text-[10px] md:text-xs;
+  min-width: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .keyboard-key.shift, .keyboard-key.backspace, .keyboard-key.tab, .keyboard-key.enter, .keyboard-key.capslock {
+    min-width: 3.5rem;
+  }
 }
 
 .keyboard-key.ctrl, .keyboard-key.alt, .keyboard-key.meta {
-  @apply px-2 text-xs;
-  min-width: 2.5rem;
+  @apply px-1 md:px-2 text-[10px] md:text-xs;
+  min-width: 2rem;
+}
+
+@media (min-width: 768px) {
+  .keyboard-key.ctrl, .keyboard-key.alt, .keyboard-key.meta {
+    min-width: 2.5rem;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .stats .stat {
+    @apply text-center;
+  }
+  
+  .stats .stat-item {
+    @apply mb-2;
+  }
 }
