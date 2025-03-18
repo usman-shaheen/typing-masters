@@ -130,6 +130,12 @@
   @apply mb-4;
 }
 
+/* Show only a limited number of lines */
+.text-display .limited-height {
+  max-height: 120px;
+  overflow: hidden;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }

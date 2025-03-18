@@ -21,7 +21,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   onComplete, 
   onProgress,
   onActiveKeysChange,
-  timeLimit,
+  timeLimit = 60, // Default to 1 minute
   colorMode,
   doubleSpacing
 }) => {
@@ -48,16 +48,29 @@ const TypingArea: React.FC<TypingAreaProps> = ({
 
   // Split text into paragraphs on component mount or when text changes
   useEffect(() => {
-    // Split text into sections of about 400 words each
-    const words = text.split(/\s+/);
-    const paragraphSize = 400; // words per paragraph
-    const splitParagraphs = [];
+    // Process the text to create paragraphs of approximately 3-4 lines (around 50-60 characters per line)
+    const averageCharsPerLine = 60;
+    const linesPerParagraph = 4;
+    const charsPerParagraph = averageCharsPerLine * linesPerParagraph;
     
-    for (let i = 0; i < words.length; i += paragraphSize) {
-      const paragraph = words.slice(i, i + paragraphSize).join(' ');
-      if (paragraph.trim().length > 0) {
-        splitParagraphs.push(paragraph.trim());
+    const words = text.split(/\s+/);
+    const splitParagraphs = [];
+    let currentParagraph = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      if ((currentParagraph + ' ' + word).length <= charsPerParagraph) {
+        currentParagraph += (currentParagraph ? ' ' : '') + word;
+      } else {
+        if (currentParagraph) {
+          splitParagraphs.push(currentParagraph.trim());
+        }
+        currentParagraph = word;
       }
+    }
+    
+    if (currentParagraph) {
+      splitParagraphs.push(currentParagraph.trim());
     }
     
     setParagraphs(splitParagraphs);
@@ -178,9 +191,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
       setStartTime(Date.now());
       setTypedText('');
       setElapsedTime(0);
-      if (timeLimit) {
-        setRemainingTime(timeLimit);
-      }
+      setRemainingTime(timeLimit || 60); // Default to 1 minute
       setIsPaused(false);
       inputRef.current?.focus();
     }
@@ -201,9 +212,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     setStatus('idle');
     setTypedText('');
     setElapsedTime(0);
-    if (timeLimit) {
-      setRemainingTime(timeLimit);
-    }
+    setRemainingTime(timeLimit || 60); // Default to 1 minute
     setIsPaused(false);
     setCurrentParagraphIndex(0);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -292,7 +301,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
         </div>
         
         <div 
-          className={cn("text-display mb-4", colorMode, isPaused && "opacity-60")}
+          className={cn("text-display limited-height mb-4", colorMode, isPaused && "opacity-60")}
         >
           {renderText()}
         </div>

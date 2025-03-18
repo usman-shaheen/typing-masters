@@ -24,7 +24,14 @@ const Index = () => {
     time: 0
   });
   const [progressHistory, setProgressHistory] = useState<TypingStats[]>([]);
-  const [settings, setSettings] = useState<TypingSettings>(defaultTypingSettings);
+  
+  // Set default timer to 1 minute (60 seconds)
+  const initialSettings = {
+    ...defaultTypingSettings,
+    testTime: '1min'
+  };
+  
+  const [settings, setSettings] = useState<TypingSettings>(initialSettings);
   const [showSettings, setShowSettings] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
 
@@ -52,7 +59,7 @@ const Index = () => {
     if (savedSettings) {
       try {
         const parsedSettings = JSON.parse(savedSettings);
-        setSettings({...defaultTypingSettings, ...parsedSettings});
+        setSettings({...initialSettings, ...parsedSettings});
       } catch (e) {
         console.error('Error loading saved settings:', e);
       }
@@ -98,45 +105,50 @@ const Index = () => {
     setSettings(newSettings);
     localStorage.setItem('typingSettings', JSON.stringify(newSettings));
     
-    // Update text content based on settings changes
-    if (updatedSettings.textType && updatedSettings.textType !== settings.textType) {
-      const filteredLessons = typingLessons.filter(lesson => {
-        if (updatedSettings.textType === 'all') return true;
-        return lesson.type?.toLowerCase() === updatedSettings.textType;
-      });
-      
-      if (filteredLessons.length > 0) {
-        // Select a lesson based on selection strategy
-        let selectedLesson;
-        if (newSettings.textSelection === 'random') {
-          const randomIndex = Math.floor(Math.random() * filteredLessons.length);
-          selectedLesson = filteredLessons[randomIndex];
-        } else if (newSettings.textSelection === 'sequential') {
-          selectedLesson = filteredLessons[0]; // Just pick the first one for now
-        } else if (newSettings.textSelection === 'difficulty') {
-          // Filter by beginner level first
-          const beginnerLessons = filteredLessons.filter(l => l.level === 'beginner');
-          selectedLesson = beginnerLessons.length > 0 ? beginnerLessons[0] : filteredLessons[0];
-        }
-        
-        if (selectedLesson) {
-          setCurrentText(selectedLesson.text);
-          setTextInfo({
-            title: selectedLesson.title,
-            author: selectedLesson.author || "Typing Test App",
-            type: selectedLesson.type || selectedLesson.level || "Practice Text"
-          });
-          
-          toast.success('Text updated', {
-            description: `Now practicing: ${selectedLesson.title}`,
-          });
-        }
-      }
+    // Update text content based on settings changes immediately
+    if (updatedSettings.textType) {
+      updateTextBasedOnSettings(newSettings);
     }
     
     toast.success('Settings updated', {
       description: 'Your typing preferences have been saved.',
     });
+  };
+  
+  // Function to update text based on settings
+  const updateTextBasedOnSettings = (newSettings: TypingSettings) => {
+    const filteredLessons = typingLessons.filter(lesson => {
+      if (newSettings.textType === 'all') return true;
+      return lesson.type?.toLowerCase() === newSettings.textType;
+    });
+    
+    if (filteredLessons.length > 0) {
+      // Select a lesson based on selection strategy
+      let selectedLesson;
+      if (newSettings.textSelection === 'random') {
+        const randomIndex = Math.floor(Math.random() * filteredLessons.length);
+        selectedLesson = filteredLessons[randomIndex];
+      } else if (newSettings.textSelection === 'sequential') {
+        selectedLesson = filteredLessons[0]; // Just pick the first one for now
+      } else if (newSettings.textSelection === 'difficulty') {
+        // Filter by beginner level first
+        const beginnerLessons = filteredLessons.filter(l => l.level === 'beginner');
+        selectedLesson = beginnerLessons.length > 0 ? beginnerLessons[0] : filteredLessons[0];
+      }
+      
+      if (selectedLesson) {
+        setCurrentText(selectedLesson.text);
+        setTextInfo({
+          title: selectedLesson.title,
+          author: selectedLesson.author || "Typing Test App",
+          type: selectedLesson.type || selectedLesson.level || "Practice Text"
+        });
+        
+        toast.success('Text updated', {
+          description: `Now practicing: ${selectedLesson.title}`,
+        });
+      }
+    }
   };
 
   const handleCustomTextSubmit = (text: string) => {
@@ -153,7 +165,7 @@ const Index = () => {
   };
 
   const getTimeLimit = () => {
-    return timeMapping[settings.testTime] || 60;
+    return timeMapping[settings.testTime] || 60; // Default to 60 seconds (1 minute)
   };
 
   const mapColorMode = (settingValue: string): "normal" | "enhanced" | "minimal" => {
