@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { calculateWPM, calculateAccuracy, TypingStatus, TypingStats } from '@/utils/typingUtils';
 import { cn } from '@/lib/utils';
 import { Clock, Play, Pause, ArrowUp, ArrowDown } from 'lucide-react';
@@ -16,7 +15,7 @@ interface TypingAreaProps {
   doubleSpacing: boolean;
 }
 
-const TypingArea: React.FC<TypingAreaProps> = ({ 
+const TypingArea = forwardRef<{ resetTyping: () => void }, TypingAreaProps>(({ 
   text, 
   onComplete, 
   onProgress,
@@ -24,7 +23,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   timeLimit = 60, // Default to 1 minute
   colorMode,
   doubleSpacing
-}) => {
+}, ref) => {
   const [typedText, setTypedText] = useState<string>('');
   const [status, setStatus] = useState<TypingStatus>('idle');
   const [startTime, setStartTime] = useState<number>(0);
@@ -46,9 +45,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Split text into paragraphs on component mount or when text changes
   useEffect(() => {
-    // Process the text to create paragraphs of approximately 3-4 lines (around 50-60 characters per line)
     const averageCharsPerLine = 60;
     const linesPerParagraph = 4;
     const charsPerParagraph = averageCharsPerLine * linesPerParagraph;
@@ -79,14 +76,12 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     }
   }, [text]);
 
-  // Focus the input when the component mounts
   useEffect(() => {
     inputRef.current?.focus();
     
-    // Handle spacebar to start/pause the timer
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && e.target === document.body) {
-        e.preventDefault(); // Prevent page scrolling
+        e.preventDefault();
         if (status === 'idle') {
           startTyping();
         } else if (status === 'running') {
@@ -103,7 +98,6 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     };
   }, [status, isPaused]);
 
-  // Handle typing stats calculation
   useEffect(() => {
     if (status !== 'running' || isPaused) return;
 
@@ -133,41 +127,33 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     setStats(newStats);
     onProgress(newStats);
 
-    // Update active keys for the virtual keyboard
     const nextChar = currentParagraphText[typedText.length] || '';
     onActiveKeysChange(nextChar ? [nextChar.toLowerCase()] : []);
-
   }, [typedText, elapsedTime, status, currentParagraphText, onProgress, onActiveKeysChange, isPaused]);
 
-  // Check if current paragraph is complete and move to next
   useEffect(() => {
     if (status === 'running' && !isPaused && typedText.length >= currentParagraphText.length) {
-      // Move to the next paragraph
       if (currentParagraphIndex < paragraphs.length - 1) {
         setCurrentParagraphIndex(prevIndex => prevIndex + 1);
         setTypedText('');
       } else {
-        // All paragraphs completed
         completeTyping();
       }
     }
   }, [typedText, currentParagraphText, status, isPaused, currentParagraphIndex, paragraphs.length]);
 
-  // Update current paragraph text when index changes
   useEffect(() => {
     if (currentParagraphIndex < paragraphs.length) {
       setCurrentParagraphText(paragraphs[currentParagraphIndex]);
     }
   }, [currentParagraphIndex, paragraphs]);
 
-  // Check if time limit is reached
   useEffect(() => {
     if (status === 'running' && !isPaused && timeLimit && remainingTime <= 0) {
       completeTyping();
     }
   }, [remainingTime, timeLimit, status, isPaused]);
 
-  // Timer effect for countdown
   useEffect(() => {
     if (status === 'running' && !isPaused) {
       timerRef.current = setInterval(() => {
@@ -185,13 +171,23 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     };
   }, [status, isPaused, timeLimit]);
 
+  useEffect(() => {
+    if (timeLimit && status === 'idle') {
+      setRemainingTime(timeLimit);
+    }
+  }, [timeLimit, status]);
+
+  useImperativeHandle(ref, () => ({
+    resetTyping: () => resetTyping()
+  }));
+
   const startTyping = () => {
     if (status === 'idle') {
       setStatus('running');
       setStartTime(Date.now());
       setTypedText('');
       setElapsedTime(0);
-      setRemainingTime(timeLimit || 60); // Default to 1 minute
+      setRemainingTime(timeLimit || 60);
       setIsPaused(false);
       inputRef.current?.focus();
     }
@@ -212,7 +208,7 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     setStatus('idle');
     setTypedText('');
     setElapsedTime(0);
-    setRemainingTime(timeLimit || 60); // Default to 1 minute
+    setRemainingTime(timeLimit || 60);
     setIsPaused(false);
     setCurrentParagraphIndex(0);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -358,13 +354,14 @@ const TypingArea: React.FC<TypingAreaProps> = ({
       </div>
     </div>
   );
-};
+});
 
-// Helper function to format time in MM:SS format
+TypingArea.displayName = 'TypingArea';
+
+export default TypingArea;
+
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
-
-export default TypingArea;

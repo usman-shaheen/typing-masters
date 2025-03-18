@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import TypingArea from '@/components/TypingArea';
 import Keyboard from '@/components/Keyboard';
@@ -82,7 +81,6 @@ const Index = () => {
     const newHistory = [...progressHistory, stats];
     setProgressHistory(newHistory);
     setCurrentStats(stats);
-    setShowResultsPopup(true);
     
     localStorage.setItem('typingProgress', JSON.stringify(newHistory));
     
@@ -99,6 +97,8 @@ const Index = () => {
     };
     
     setHighlightKeys(homeRowMap[settings.keyboardLayout] || ['a', 's', 'd', 'f', 'j', 'k', 'l', ';']);
+    
+    setShowResultsPopup(true);
   };
 
   const handleTypingProgress = (stats: TypingStats) => {
@@ -118,6 +118,11 @@ const Index = () => {
     // Update text content based on settings changes immediately
     if (updatedSettings.textType) {
       updateTextBasedOnSettings(newSettings);
+    }
+    
+    // Immediately update time limit if that setting changes
+    if (updatedSettings.testTime && timeLimit !== timeMapping[updatedSettings.testTime as TypingSettings['testTime']]) {
+      setRemainingTime(timeMapping[updatedSettings.testTime as TypingSettings['testTime']] || 60);
     }
     
     toast.success('Settings updated', {
@@ -187,6 +192,9 @@ const Index = () => {
 
   const handleCloseResultsPopup = () => {
     setShowResultsPopup(false);
+  };
+  
+  const handleResetEverything = () => {
     // Reset stats to zero
     setCurrentStats({
       wpm: 0,
@@ -196,7 +204,23 @@ const Index = () => {
       totalChars: 0,
       time: 0
     });
+    
+    // Reset typing area state
+    if (typingAreaRef.current) {
+      typingAreaRef.current.resetTyping();
+    }
   };
+  
+  // Add ref for TypingArea to allow resetting
+  const typingAreaRef = useRef<any>(null);
+  
+  // Add state for remainingTime to be updated immediately when settings change
+  const [remainingTime, setRemainingTime] = useState<number>(timeMapping[settings.testTime] || 60);
+  
+  // Update remaining time whenever settings.testTime changes
+  useEffect(() => {
+    setRemainingTime(timeMapping[settings.testTime] || 60);
+  }, [settings.testTime]);
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-sky-50 to-white font-sans">
@@ -251,9 +275,10 @@ const Index = () => {
               onComplete={handleTypingComplete}
               onProgress={handleTypingProgress}
               onActiveKeysChange={handleActiveKeysChange}
-              timeLimit={getTimeLimit()}
+              timeLimit={remainingTime} // Use remainingTime here instead of getTimeLimit()
               colorMode={mapColorMode(settings.textColorHighlighting)}
               doubleSpacing={settings.doubleSpacingBetweenSentences}
+              ref={typingAreaRef}
             />
             
             <div className="text-center text-sm text-gray-500 italic mb-4">
@@ -290,7 +315,15 @@ const Index = () => {
         isOpen={showResultsPopup}
         onClose={handleCloseResultsPopup}
         stats={currentStats}
+        onReset={handleResetEverything} // Pass the reset handler
       />
+      
+      {/* Footer */}
+      <footer className="w-full py-4 mt-8 bg-gray-100">
+        <div className="container mx-auto px-4 text-center text-gray-600">
+          <p>© {new Date().getFullYear()} - Design by Usman Shaheen</p>
+        </div>
+      </footer>
     </div>
   );
 };

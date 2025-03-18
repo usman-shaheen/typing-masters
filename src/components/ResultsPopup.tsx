@@ -9,11 +9,21 @@ interface ResultsPopupProps {
   isOpen: boolean;
   onClose: () => void;
   stats: TypingStats;
+  onReset?: () => void; // Adding an onReset prop to reset everything
 }
 
-const ResultsPopup: React.FC<ResultsPopupProps> = ({ isOpen, onClose, stats }) => {
+const ResultsPopup: React.FC<ResultsPopupProps> = ({ isOpen, onClose, stats, onReset }) => {
+  
+  const handleClose = () => {
+    // Call onReset if provided, otherwise just onClose
+    if (onReset) {
+      onReset();
+    }
+    onClose();
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-center text-2xl font-bold text-primary">
@@ -72,7 +82,7 @@ const ResultsPopup: React.FC<ResultsPopupProps> = ({ isOpen, onClose, stats }) =
         </div>
         
         <DialogFooter>
-          <Button className="w-full" onClick={onClose}>
+          <Button className="w-full" onClick={handleClose}>
             Try Again
           </Button>
         </DialogFooter>
