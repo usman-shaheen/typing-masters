@@ -6,7 +6,7 @@ import Keyboard from '@/components/Keyboard';
 import ProgressChart from '@/components/ProgressChart';
 import StatsDisplay from '@/components/StatsDisplay';
 import TextSettings from '@/components/TextSettings';
-import { typingLessons, TypingStats, TypingSettings, defaultTypingSettings } from '@/utils/typingUtils';
+import { typingLessons, TypingStats, TypingSettings, defaultTypingSettings, longPracticeText, timeMapping } from '@/utils/typingUtils';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
@@ -28,8 +28,13 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
 
-  // Current text for typing practice
-  const [currentText, setCurrentText] = useState(typingLessons[0].text);
+  // Current text for typing practice (default to the long practice text)
+  const [currentText, setCurrentText] = useState(longPracticeText);
+  const [textInfo, setTextInfo] = useState({
+    title: "Comprehensive Typing Practice",
+    author: "Typing Test App",
+    type: "Practice Text"
+  });
 
   // When component mounts, try to load progress history and settings from localStorage
   useEffect(() => {
@@ -69,8 +74,20 @@ const Index = () => {
     // Save to localStorage
     localStorage.setItem('typingProgress', JSON.stringify(newHistory));
     
-    // Highlight 'home row' keys (asdf jkl;)
-    setHighlightKeys(['a', 's', 'd', 'f', 'j', 'k', 'l', ';']);
+    // Highlight 'home row' keys based on the selected keyboard layout
+    const homeRowMap = {
+      'qwerty': ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'],
+      'qwerty-uk': ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'],
+      'dvorak': ['a', 'o', 'e', 'u', 'h', 't', 'n', 's'],
+      'colemak': ['a', 'r', 's', 't', 'n', 'e', 'i', 'o'],
+      'colemak-uk': ['a', 'r', 's', 't', 'n', 'e', 'i', 'o'],
+      'azerty': ['q', 's', 'd', 'f', 'j', 'k', 'l', 'm'],
+      'qwertz': ['a', 's', 'd', 'f', 'j', 'k', 'l', 'ö'],
+      'qwertz-sf': ['a', 's', 'd', 'f', 'j', 'k', 'l', 'é'],
+      'numpad': ['4', '5', '6'],
+    };
+    
+    setHighlightKeys(homeRowMap[settings.keyboardLayout] || ['a', 's', 'd', 'f', 'j', 'k', 'l', ';']);
   };
 
   // Handle typing progress updates
@@ -96,13 +113,38 @@ const Index = () => {
     });
   };
 
+  // Handle custom text submission
+  const handleCustomTextSubmit = (text: string) => {
+    setCurrentText(text);
+    setTextInfo({
+      title: "Custom Text",
+      author: "User",
+      type: "Custom"
+    });
+    
+    toast.success('Custom text saved', {
+      description: 'Your custom text has been set for typing practice.',
+    });
+  };
+
+  // Get time limit in seconds based on settings
+  const getTimeLimit = () => {
+    return timeMapping[settings.testTime] || 60;
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-sky-50 to-white">
       <div className="container px-4 py-8 mx-auto max-w-6xl">
         <Header />
         
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-primary">Typing Practice</h2>
+          <div className="text-info">
+            <h2 className="text-2xl font-bold text-primary">{textInfo.title}</h2>
+            <div className="flex text-sm text-gray-500 gap-6">
+              <span>Author: {textInfo.author}</span>
+              <span>Type: {textInfo.type}</span>
+            </div>
+          </div>
           <div className="flex space-x-2">
             <Toggle 
               pressed={showKeyboard} 
@@ -127,10 +169,11 @@ const Index = () => {
         </div>
         
         {showSettings && (
-          <div className="mb-6 animate-fade-in">
+          <div className="mb-6 animate-in fade-in duration-300">
             <TextSettings 
               settings={settings} 
               onUpdateSettings={handleUpdateSettings} 
+              onCustomTextSubmit={handleCustomTextSubmit}
             />
           </div>
         )}
@@ -142,9 +185,7 @@ const Index = () => {
               onComplete={handleTypingComplete}
               onProgress={handleTypingProgress}
               onActiveKeysChange={handleActiveKeysChange}
-              timeLimit={settings.testTime === 'unlimited' ? null : 
-                settings.testTime === '1min' ? 60 : 
-                settings.testTime === '2min' ? 120 : 300}
+              timeLimit={getTimeLimit()}
               colorMode={settings.textColorHighlighting}
               doubleSpacing={settings.doubleSpacingBetweenSentences}
             />
