@@ -26,10 +26,9 @@ const Index = () => {
   const [progressHistory, setProgressHistory] = useState<TypingStats[]>([]);
   const [showResultsPopup, setShowResultsPopup] = useState(false);
   
-  // Set default timer to 1 minute (60 seconds)
   const initialSettings: TypingSettings = {
     ...defaultTypingSettings,
-    testTime: '1min' // Explicitly use a valid string literal value from the union type
+    testTime: '1min'
   };
   
   const [settings, setSettings] = useState<TypingSettings>(initialSettings);
@@ -60,7 +59,6 @@ const Index = () => {
     if (savedSettings) {
       try {
         const parsedSettings = JSON.parse(savedSettings);
-        // Ensure that testTime is a valid option
         const validTestTime = timeMapping.hasOwnProperty(parsedSettings.testTime) 
           ? parsedSettings.testTime 
           : '1min';
@@ -68,7 +66,7 @@ const Index = () => {
         setSettings({
           ...initialSettings,
           ...parsedSettings,
-          testTime: validTestTime as TypingSettings['testTime'] // Type assertion to ensure correct type
+          testTime: validTestTime as TypingSettings['testTime']
         });
       } catch (e) {
         console.error('Error loading saved settings:', e);
@@ -77,7 +75,6 @@ const Index = () => {
   }, []);
 
   const handleTypingComplete = (stats: TypingStats) => {
-    // Save stats and show results popup instead of toast
     const newHistory = [...progressHistory, stats];
     setProgressHistory(newHistory);
     setCurrentStats(stats);
@@ -115,13 +112,11 @@ const Index = () => {
     setSettings(newSettings);
     localStorage.setItem('typingSettings', JSON.stringify(newSettings));
     
-    // Update text content based on settings changes immediately
     if (updatedSettings.textType) {
       updateTextBasedOnSettings(newSettings);
     }
     
-    // Immediately update time limit if that setting changes
-    if (updatedSettings.testTime && timeLimit !== timeMapping[updatedSettings.testTime as TypingSettings['testTime']]) {
+    if (updatedSettings.testTime && getTimeLimit() !== timeMapping[updatedSettings.testTime as TypingSettings['testTime']]) {
       setRemainingTime(timeMapping[updatedSettings.testTime as TypingSettings['testTime']] || 60);
     }
     
@@ -130,7 +125,6 @@ const Index = () => {
     });
   };
   
-  // Function to update text based on settings
   const updateTextBasedOnSettings = (newSettings: TypingSettings) => {
     const filteredLessons = typingLessons.filter(lesson => {
       if (newSettings.textType === 'all') return true;
@@ -138,15 +132,13 @@ const Index = () => {
     });
     
     if (filteredLessons.length > 0) {
-      // Select a lesson based on selection strategy
       let selectedLesson;
       if (newSettings.textSelection === 'random') {
         const randomIndex = Math.floor(Math.random() * filteredLessons.length);
         selectedLesson = filteredLessons[randomIndex];
       } else if (newSettings.textSelection === 'sequential') {
-        selectedLesson = filteredLessons[0]; // Just pick the first one for now
+        selectedLesson = filteredLessons[0];
       } else if (newSettings.textSelection === 'difficulty') {
-        // Filter by beginner level first
         const beginnerLessons = filteredLessons.filter(l => l.level === 'beginner');
         selectedLesson = beginnerLessons.length > 0 ? beginnerLessons[0] : filteredLessons[0];
       }
@@ -180,7 +172,7 @@ const Index = () => {
   };
 
   const getTimeLimit = () => {
-    return timeMapping[settings.testTime] || 60; // Default to 60 seconds (1 minute)
+    return timeMapping[settings.testTime] || 60;
   };
 
   const mapColorMode = (settingValue: string): "normal" | "enhanced" | "minimal" => {
@@ -195,7 +187,6 @@ const Index = () => {
   };
   
   const handleResetEverything = () => {
-    // Reset stats to zero
     setCurrentStats({
       wpm: 0,
       accuracy: 0,
@@ -205,19 +196,15 @@ const Index = () => {
       time: 0
     });
     
-    // Reset typing area state
     if (typingAreaRef.current) {
       typingAreaRef.current.resetTyping();
     }
   };
   
-  // Add ref for TypingArea to allow resetting
   const typingAreaRef = useRef<any>(null);
   
-  // Add state for remainingTime to be updated immediately when settings change
   const [remainingTime, setRemainingTime] = useState<number>(timeMapping[settings.testTime] || 60);
   
-  // Update remaining time whenever settings.testTime changes
   useEffect(() => {
     setRemainingTime(timeMapping[settings.testTime] || 60);
   }, [settings.testTime]);
@@ -275,7 +262,7 @@ const Index = () => {
               onComplete={handleTypingComplete}
               onProgress={handleTypingProgress}
               onActiveKeysChange={handleActiveKeysChange}
-              timeLimit={remainingTime} // Use remainingTime here instead of getTimeLimit()
+              timeLimit={remainingTime}
               colorMode={mapColorMode(settings.textColorHighlighting)}
               doubleSpacing={settings.doubleSpacingBetweenSentences}
               ref={typingAreaRef}
@@ -315,10 +302,9 @@ const Index = () => {
         isOpen={showResultsPopup}
         onClose={handleCloseResultsPopup}
         stats={currentStats}
-        onReset={handleResetEverything} // Pass the reset handler
+        onReset={handleResetEverything}
       />
       
-      {/* Footer */}
       <footer className="w-full py-4 mt-8 bg-gray-100">
         <div className="container mx-auto px-4 text-center text-gray-600">
           <p>© {new Date().getFullYear()} - Design by Usman Shaheen</p>
