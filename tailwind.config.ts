@@ -71,7 +71,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        sans: ["Poppins", ...fontFamily.sans],
         mono: ["Consolas", "Monaco", "Andale Mono", "Ubuntu Mono", "monospace"],
       },
       keyframes: {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TypingArea from '@/components/TypingArea';
@@ -5,6 +6,7 @@ import Keyboard from '@/components/Keyboard';
 import ProgressChart from '@/components/ProgressChart';
 import StatsDisplay from '@/components/StatsDisplay';
 import TextSettings from '@/components/TextSettings';
+import ResultsPopup from '@/components/ResultsPopup';
 import { typingLessons, TypingStats, TypingSettings, defaultTypingSettings, longPracticeText, timeMapping } from '@/utils/typingUtils';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +25,7 @@ const Index = () => {
     time: 0
   });
   const [progressHistory, setProgressHistory] = useState<TypingStats[]>([]);
+  const [showResultsPopup, setShowResultsPopup] = useState(false);
   
   // Set default timer to 1 minute (60 seconds)
   const initialSettings: TypingSettings = {
@@ -75,12 +78,11 @@ const Index = () => {
   }, []);
 
   const handleTypingComplete = (stats: TypingStats) => {
-    toast.success('Exercise completed!', {
-      description: `You typed at ${stats.wpm} WPM with ${stats.accuracy}% accuracy.`,
-    });
-    
+    // Save stats and show results popup instead of toast
     const newHistory = [...progressHistory, stats];
     setProgressHistory(newHistory);
+    setCurrentStats(stats);
+    setShowResultsPopup(true);
     
     localStorage.setItem('typingProgress', JSON.stringify(newHistory));
     
@@ -183,6 +185,19 @@ const Index = () => {
     return settingValue as "normal" | "enhanced";
   };
 
+  const handleCloseResultsPopup = () => {
+    setShowResultsPopup(false);
+    // Reset stats to zero
+    setCurrentStats({
+      wpm: 0,
+      accuracy: 0,
+      correctChars: 0,
+      incorrectChars: 0,
+      totalChars: 0,
+      time: 0
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-sky-50 to-white font-sans">
       <div className="container px-4 py-8 mx-auto max-w-6xl">
@@ -270,6 +285,12 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      <ResultsPopup 
+        isOpen={showResultsPopup}
+        onClose={handleCloseResultsPopup}
+        stats={currentStats}
+      />
     </div>
   );
 };
