@@ -27,7 +27,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
   onCustomTextSubmit
 }) => {
   const [customText, setCustomText] = useState<string>('');
-  const [showCustomText, setShowCustomText] = useState<boolean>(false);
+  const [showCustomText, setShowCustomText] = useState<boolean>(settings.textType === 'custom');
 
   const handleCustomTextSubmit = () => {
     if (onCustomTextSubmit && customText.trim().length > 0) {
@@ -40,7 +40,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
   };
 
   return (
-    <div className="text-settings glass-card p-6">
+    <div className="text-settings glass-card p-6 font-sans">
       <h3 className="text-xl font-semibold text-center mb-5 flex items-center justify-center gap-2">
         <Settings className="h-5 w-5 text-primary" />
         Typing Settings
@@ -56,7 +56,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.textSelection} 
             onValueChange={(value) => onUpdateSettings({ textSelection: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-12 text-base">
               <SelectValue placeholder="Select text selection mode" />
             </SelectTrigger>
             <SelectContent>
@@ -83,7 +83,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
               }
             }}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-12 text-base">
               <SelectValue placeholder="Select text type" />
             </SelectTrigger>
             <SelectContent>
@@ -115,7 +115,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
           <div className="flex gap-2">
             <Button 
               onClick={handleCustomTextSubmit}
-              className="bg-primary hover:bg-primary/90 h-10 text-base"
+              className="bg-primary hover:bg-primary/90 h-12 text-base px-6"
               size="default"
             >
               Submit
@@ -124,7 +124,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
               onClick={clearCustomText}
               variant="outline"
               size="default"
-              className="h-10 text-base"
+              className="h-12 text-base px-6"
             >
               Clear Text
             </Button>
@@ -142,7 +142,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.testTime} 
             onValueChange={(value) => onUpdateSettings({ testTime: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-12 text-base">
               <SelectValue placeholder="Select test time" />
             </SelectTrigger>
             <SelectContent>
@@ -164,7 +164,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.textColorHighlighting} 
             onValueChange={(value) => onUpdateSettings({ textColorHighlighting: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-12 text-base">
               <SelectValue placeholder="Select highlighting style" />
             </SelectTrigger>
             <SelectContent>
@@ -189,7 +189,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             <SelectTrigger className={cn(
               "bg-primary/10 border-primary/20",
               "hover:bg-primary/20 transition-colors",
-              "h-11 text-base"
+              "h-12 text-base"
             )}>
               <SelectValue placeholder="Select keyboard layout" />
             </SelectTrigger>
@@ -213,7 +213,7 @@ const TextSettings: React.FC<TextSettingsProps> = ({
             value={settings.testResetHotkey} 
             onValueChange={(value) => onUpdateSettings({ testResetHotkey: value as any })}
           >
-            <SelectTrigger className="bg-primary/10 border-primary/20 h-11 text-base">
+            <SelectTrigger className="bg-primary/10 border-primary/20 h-12 text-base">
               <SelectValue placeholder="Select reset hotkeys" />
             </SelectTrigger>
             <SelectContent>

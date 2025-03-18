@@ -98,6 +98,42 @@ const Index = () => {
     setSettings(newSettings);
     localStorage.setItem('typingSettings', JSON.stringify(newSettings));
     
+    // Update text content based on settings changes
+    if (updatedSettings.textType && updatedSettings.textType !== settings.textType) {
+      const filteredLessons = typingLessons.filter(lesson => {
+        if (updatedSettings.textType === 'all') return true;
+        return lesson.type?.toLowerCase() === updatedSettings.textType;
+      });
+      
+      if (filteredLessons.length > 0) {
+        // Select a lesson based on selection strategy
+        let selectedLesson;
+        if (newSettings.textSelection === 'random') {
+          const randomIndex = Math.floor(Math.random() * filteredLessons.length);
+          selectedLesson = filteredLessons[randomIndex];
+        } else if (newSettings.textSelection === 'sequential') {
+          selectedLesson = filteredLessons[0]; // Just pick the first one for now
+        } else if (newSettings.textSelection === 'difficulty') {
+          // Filter by beginner level first
+          const beginnerLessons = filteredLessons.filter(l => l.level === 'beginner');
+          selectedLesson = beginnerLessons.length > 0 ? beginnerLessons[0] : filteredLessons[0];
+        }
+        
+        if (selectedLesson) {
+          setCurrentText(selectedLesson.text);
+          setTextInfo({
+            title: selectedLesson.title,
+            author: selectedLesson.author || "Typing Test App",
+            type: selectedLesson.type || selectedLesson.level || "Practice Text"
+          });
+          
+          toast.success('Text updated', {
+            description: `Now practicing: ${selectedLesson.title}`,
+          });
+        }
+      }
+    }
+    
     toast.success('Settings updated', {
       description: 'Your typing preferences have been saved.',
     });
@@ -128,7 +164,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-sky-50 to-white">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-sky-50 to-white font-sans">
       <div className="container px-4 py-8 mx-auto max-w-6xl">
         <Header />
         
@@ -144,7 +180,7 @@ const Index = () => {
             <Toggle 
               pressed={showKeyboard} 
               onPressedChange={setShowKeyboard}
-              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-base"
+              className="flex items-center gap-1 px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 text-base h-12"
               aria-label="Toggle keyboard"
             >
               <KeyboardIcon size={18} />
@@ -153,7 +189,7 @@ const Index = () => {
             <Toggle 
               pressed={showSettings} 
               onPressedChange={setShowSettings}
-              className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-base"
+              className="flex items-center gap-1 px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 text-base h-12"
               aria-label="Toggle settings"
             >
               <Settings size={18} />

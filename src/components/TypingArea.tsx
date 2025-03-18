@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { calculateWPM, calculateAccuracy, TypingStatus, TypingStats } from '@/utils/typingUtils';
 import { cn } from '@/lib/utils';
-import { Clock, Play, Pause, ArrowUp, ArrowDown, Plus, Minus } from 'lucide-react';
+import { Clock, Play, Pause, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
@@ -42,18 +42,23 @@ const TypingArea: React.FC<TypingAreaProps> = ({
   const [paragraphs, setParagraphs] = useState<string[]>([]);
   const [currentParagraphIndex, setCurrentParagraphIndex] = useState<number>(0);
   const [currentParagraphText, setCurrentParagraphText] = useState<string>('');
-  const [fontSize, setFontSize] = useState<number>(16);
-  const [backspaceCount, setBackspaceCount] = useState<number>(1);
-
+  
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Split text into paragraphs on component mount or when text changes
   useEffect(() => {
-    const splitParagraphs = text
-      .split(/\n{2,}/) // Split by double newlines
-      .filter(p => p.trim().length > 0) // Remove empty paragraphs
-      .map(p => p.trim());
+    // Split text into sections of about 400 words each
+    const words = text.split(/\s+/);
+    const paragraphSize = 400; // words per paragraph
+    const splitParagraphs = [];
+    
+    for (let i = 0; i < words.length; i += paragraphSize) {
+      const paragraph = words.slice(i, i + paragraphSize).join(' ');
+      if (paragraph.trim().length > 0) {
+        splitParagraphs.push(paragraph.trim());
+      }
+    }
     
     setParagraphs(splitParagraphs);
     if (splitParagraphs.length > 0) {
@@ -74,13 +79,6 @@ const TypingArea: React.FC<TypingAreaProps> = ({
         } else if (status === 'running') {
           togglePause();
         }
-      }
-      
-      // Handle backspace for backspace count
-      if (e.code === 'Backspace' && status === 'running' && !isPaused) {
-        // The actual deletion of characters is handled by the browser
-        // This is just for counting backspaces
-        setBackspaceCount(prev => prev + 1);
       }
     };
     
@@ -232,22 +230,6 @@ const TypingArea: React.FC<TypingAreaProps> = ({
     }
   };
 
-  const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 1, 24));
-  };
-
-  const decreaseFontSize = () => {
-    setFontSize(prev => Math.max(prev - 1, 12));
-  };
-
-  const increaseBackspaceCount = () => {
-    setBackspaceCount(prev => Math.min(prev + 1, 10));
-  };
-
-  const decreaseBackspaceCount = () => {
-    setBackspaceCount(prev => Math.max(prev - 1, 1));
-  };
-
   const renderText = () => {
     const displayText = doubleSpacing 
       ? currentParagraphText.replace(/\.\s+/g, '.  ') 
@@ -288,48 +270,6 @@ const TypingArea: React.FC<TypingAreaProps> = ({
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="font-adjustment flex items-center space-x-1 mr-4">
-              <span className="text-sm text-gray-600">Font:</span>
-              <Button 
-                onClick={decreaseFontSize} 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium w-5 text-center">{fontSize}</span>
-              <Button 
-                onClick={increaseFontSize} 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="backspace-adjustment flex items-center space-x-1 mr-4">
-              <span className="text-sm text-gray-600">Backspace:</span>
-              <Button 
-                onClick={decreaseBackspaceCount} 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium w-5 text-center">{backspaceCount}</span>
-              <Button 
-                onClick={increaseBackspaceCount} 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            
             <button 
               onClick={status === 'running' ? togglePause : startTyping} 
               className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
@@ -353,7 +293,6 @@ const TypingArea: React.FC<TypingAreaProps> = ({
         
         <div 
           className={cn("text-display mb-4", colorMode, isPaused && "opacity-60")}
-          style={{ fontSize: `${fontSize}px` }}
         >
           {renderText()}
         </div>
@@ -368,7 +307,6 @@ const TypingArea: React.FC<TypingAreaProps> = ({
             isPaused && "opacity-60 cursor-not-allowed",
             "text-base"
           )}
-          style={{ fontSize: `${fontSize}px` }}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
